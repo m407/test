@@ -15,6 +15,7 @@ run_stage() {
   local stage_name="$1"
   local file_name="$2"
   local performer_prompt="$3"
+  local review_prompt="$4"
   local file_path="$WORKDIR/$file_name"
 
   # Performer generates initial document
@@ -26,7 +27,7 @@ run_stage() {
     local content
     content=$(cat "$file_path")
     local prompt
-    prompt=$(printf 'You are an expert reviewing stage "%s". Refine the following Markdown and return the full updated document.\n\n%s\n' "$stage_name" "$content")
+    prompt="$review_prompt"$'\n\n'$content$'\n'
     "$agent" -t "$prompt" > "$file_path"
   done
 }
@@ -68,7 +69,11 @@ Description of the module/context where the changes will take place.
 Any additional remarks that may affect the design.
 EOT
 
-run_stage "Initial Task Analysis" "01_initial_task_analysis.md" "$STAGE1_PROMPT"
+read -r -d '' STAGE1_REVIEW <<'EOT'
+You are an expert reviewing the "Initial Task Analysis" stage. Check completeness and correctness of the analysis. Correct or clarify the data in the Markdown document and return the full updated document.
+EOT
+
+run_stage "Initial Task Analysis" "01_initial_task_analysis.md" "$STAGE1_PROMPT" "$STAGE1_REVIEW"
 
 # Stage 2: Analysis of Existing Solutions
 read -r -d '' STAGE2_PROMPT <<'EOT'
@@ -93,7 +98,11 @@ Find similar implementations in the repository, study architecture and conventio
 Specifics that influence the approach selection.
 EOT
 
-run_stage "Analysis of Existing Solutions" "02_existing_solutions.md" "$STAGE2_PROMPT"
+read -r -d '' STAGE2_REVIEW <<'EOT'
+You are an expert reviewing the "Analysis of Existing Solutions" stage. Check the relevance and validity of the found examples. Add missing solutions or remove unnecessary ones, and return the full updated document.
+EOT
+
+run_stage "Analysis of Existing Solutions" "02_existing_solutions.md" "$STAGE2_PROMPT" "$STAGE2_REVIEW"
 
 # Stage 3: Requirements Formalization
 read -r -d '' STAGE3_PROMPT <<'EOT'
@@ -123,7 +132,11 @@ Description of behavior on repeated requests or failures.
 Additional information.
 EOT
 
-run_stage "Requirements Formalization" "03_requirements_formalization.md" "$STAGE3_PROMPT"
+read -r -d '' STAGE3_REVIEW <<'EOT'
+You are an expert reviewing the "Requirements Formalization" stage. Ensure the scenarios are complete and the formulations are accurate. Refine the Markdown document and return the full updated version.
+EOT
+
+run_stage "Requirements Formalization" "03_requirements_formalization.md" "$STAGE3_PROMPT" "$STAGE3_REVIEW"
 
 # Stage 4: Solution Design
 read -r -d '' STAGE4_PROMPT <<'EOT'
@@ -156,7 +169,11 @@ Link or embedded image.
 Implementation specifics.
 EOT
 
-run_stage "Solution Design" "04_solution_design.md" "$STAGE4_PROMPT"
+read -r -d '' STAGE4_REVIEW <<'EOT'
+You are an expert reviewing the "Solution Design" stage. Review architectural decisions and correct or clarify diagrams and APIs. Return the full updated Markdown document.
+EOT
+
+run_stage "Solution Design" "04_solution_design.md" "$STAGE4_PROMPT" "$STAGE4_REVIEW"
 
 # Stage 5: Implementation
 read -r -d '' STAGE5_PROMPT <<'EOT'
@@ -184,7 +201,11 @@ Important information for working with this code.
 Technical nuances depending on the environment.
 EOT
 
-run_stage "Implementation" "05_implementation.md" "$STAGE5_PROMPT"
+read -r -d '' STAGE5_REVIEW <<'EOT'
+You are an expert reviewing the "Implementation" stage. Check code compliance with standards and clarify descriptions, adding important points. Return the full updated Markdown document.
+EOT
+
+run_stage "Implementation" "05_implementation.md" "$STAGE5_PROMPT" "$STAGE5_REVIEW"
 
 # Stage 6: Logging and Observability
 read -r -d '' STAGE6_PROMPT <<'EOT'
@@ -205,7 +226,11 @@ Add logging and metrics. Create a Markdown document using the structure:
 Specifics of integration with the monitoring system.
 EOT
 
-run_stage "Logging and Observability" "06_logging_observability.md" "$STAGE6_PROMPT"
+read -r -d '' STAGE6_REVIEW <<'EOT'
+You are an expert reviewing the "Logging and Observability" stage. Check the informativeness of logs and metrics and adjust levels and formats as needed. Return the full updated Markdown document.
+EOT
+
+run_stage "Logging and Observability" "06_logging_observability.md" "$STAGE6_PROMPT" "$STAGE6_REVIEW"
 
 # Stage 7: Security and Compliance
 read -r -d '' STAGE7_PROMPT <<'EOT'
@@ -229,7 +254,11 @@ List of added checks or restrictions.
 Additional information.
 EOT
 
-run_stage "Security and Compliance" "07_security_compliance.md" "$STAGE7_PROMPT"
+read -r -d '' STAGE7_REVIEW <<'EOT'
+You are an expert reviewing the "Security and Compliance" stage. Check compliance with requirements and correct any violations. Return the full updated Markdown document.
+EOT
+
+run_stage "Security and Compliance" "07_security_compliance.md" "$STAGE7_PROMPT" "$STAGE7_REVIEW"
 
 # Stage 8: Documentation
 read -r -d '' STAGE8_PROMPT <<'EOT'
@@ -251,6 +280,10 @@ Link to README in the repository.
 Documentation-related specifics.
 EOT
 
-run_stage "Documentation" "08_documentation_changes.md" "$STAGE8_PROMPT"
+read -r -d '' STAGE8_REVIEW <<'EOT'
+You are an expert reviewing the "Documentation" stage. Check the README for relevance and correct wording. Return the full updated Markdown document.
+EOT
+
+run_stage "Documentation" "08_documentation_changes.md" "$STAGE8_PROMPT" "$STAGE8_REVIEW"
 
 echo "Workflow complete. Documents are located in $WORKDIR/"
